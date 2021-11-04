@@ -19,3 +19,4 @@ export DEFAULT_REGION=eu-central-1
 aws --endpoint-url=http://localhost:4566 s3api create-bucket --bucket test-bucket --no-cli-pager
 fallocate -l 1G 1gigfile
 aws --endpoint-url=http://localhost:4566 s3 cp 1gigfile s3://test-bucket/1gigfile
+rm 1gigfile

@@ -13,5 +13,8 @@ simply run `mvn spring-boot:run`. It will start the app on port 9000
 This entpoint returns a file from s3 as byteArray. To run it with cURL you can execute following command
 `curl localhost:9000/download/{key} --output file`
 
+## GET /downloadFolder/{folderkey}
+This endpoint returns all files in a folder as byteArray
+
 # Performance
 For a 1Gigfile the services needs less than 150MB on Memory. The duration to download the file needs 3 seconds.

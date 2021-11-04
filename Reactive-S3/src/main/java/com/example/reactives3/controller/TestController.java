@@ -2,6 +2,7 @@ package com.example.reactives3.controller;
 
 import com.example.reactives3.config.S3ClientConfigurarionProperties;
 import com.example.reactives3.exception.DownloadFailedException;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,9 +16,13 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -55,6 +60,47 @@ public class TestController {
                                     })
                             );
                 });
+    }
+
+    @GetMapping(value = "/downloadFolder/{key}")
+    public Mono<ResponseEntity<Flux<byte[]>>> testFolderEndpoint(@PathVariable(name = "key") String key) throws IOException {
+        return Mono.just(ResponseEntity.ok(downloadFilesFromFolder(key)
+                        .flatMap(
+                                bufferFlux -> bufferFlux)
+                        .flatMap(bufferFlux -> bufferFlux)
+                        .map(ByteBuffer::array)
+                )
+        ).doOnSuccess(response -> Runtime.getRuntime().gc());
+    }
+
+    private Flux<Flux<Flux<ByteBuffer>>> downloadFilesFromFolder(String folder) {
+        ListObjectsV2Request listObjectsV2Request = ListObjectsV2Request.builder()
+                .bucket(s3config.getBucket())
+                .prefix(folder)
+                .build();
+
+        CompletableFuture<ListObjectsV2Response> listObjectsV2ResponseCompletableFuture = s3client.listObjectsV2(listObjectsV2Request);
+        return Mono.fromFuture(listObjectsV2ResponseCompletableFuture)
+                .map(response ->
+                        {
+                            List<Flux<ByteBuffer>> list = new ArrayList<>();
+                            response.contents()
+                                    .forEach(
+                                            s3Object -> list.add(this.downloadFile(s3Object.key()).flux)
+                                    );
+                            return Flux.fromIterable(list);
+                        }
+                ).flux();
+    }
+
+    @SneakyThrows
+    private FluxResponse downloadFile(String key) {
+        GetObjectRequest request = GetObjectRequest.builder()
+                .bucket(s3config.getBucket())
+                .key(key)
+                .build();
+
+        return s3client.getObject(request, new FluxResponseProvider()).get();
     }
 
     /**
