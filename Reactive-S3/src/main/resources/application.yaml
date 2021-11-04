@@ -1,0 +1,9 @@
+server:
+  port: 9000
+app:
+  aws:
+    region: eu-central-1
+    accessKey: foo
+    secretKey: bar
+    endpoint: http://localhost:4566
+    bucket: test-bucket
