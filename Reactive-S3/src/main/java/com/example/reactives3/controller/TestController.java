@@ -1,174 +1,57 @@
 package com.example.reactives3.controller;
 
-import com.example.reactives3.config.S3ClientConfigurarionProperties;
-import com.example.reactives3.exception.DownloadFailedException;
-import lombok.SneakyThrows;
-import org.springframework.http.HttpHeaders;
+import com.example.reactives3.model.FileInformation;
+import com.example.reactives3.service.S3Service;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.core.async.AsyncResponseTransformer;
-import software.amazon.awssdk.core.async.SdkPublisher;
-import software.amazon.awssdk.http.SdkHttpResponse;
-import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 
-import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 public class TestController {
-    private final S3AsyncClient s3client;
-    private final S3ClientConfigurarionProperties s3config;
 
-    public TestController(S3AsyncClient s3client, S3ClientConfigurarionProperties s3config) {
-        this.s3client = s3client;
-        this.s3config = s3config;
+    private final S3Service s3Service;
+
+    public TestController(S3Service s3Service) {
+        this.s3Service = s3Service;
     }
 
-    @GetMapping(value = "/download/{key}")
-    public Mono<ResponseEntity<Flux<byte[]>>> testEndpoint(@PathVariable(name = "key") String key) throws IOException {
-        GetObjectRequest request = GetObjectRequest.builder()
-                .bucket(s3config.getBucket())
-                .key(key)
-                .build();
-
-        return Mono.fromFuture(s3client.getObject(request, new FluxResponseProvider()))
-                .map((response) -> {
-                    checkResult(response.sdkResponse);
-                    String filename = getMetadataItem(response.sdkResponse, "filename", key);
-
-                    return ResponseEntity.ok()
-                            .header(HttpHeaders.CONTENT_TYPE, response.sdkResponse.contentType())
-                            .header(HttpHeaders.CONTENT_LENGTH, Long.toString(response.sdkResponse.contentLength()))
-                            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                            .body(response
-                                    .flux
-                                    .map(ByteBuffer::array)
-                                    .doOnComplete(() -> {
-                                        Runtime.getRuntime().gc();
-                                    })
-                            );
-                });
+    @RequestMapping(value = "/download",
+            produces = {"text/event-stream"},
+            method = RequestMethod.GET)
+    public Mono<ResponseEntity<Flux<byte[]>>> testEndpoint(@RequestParam(name = "key") String key) {
+        return s3Service.downloadFileTest(key)
+                .map((response) -> ResponseEntity.ok()
+                        .body(response
+                                .getFlux()
+                                .map(ByteBuffer::array)
+                                .doOnComplete(() -> Runtime.getRuntime().gc())
+                        ));
     }
 
     @GetMapping(value = "/downloadFolder/{key}")
-    public Mono<ResponseEntity<Flux<byte[]>>> testFolderEndpoint(@PathVariable(name = "key") String key) throws IOException {
-        return Mono.just(ResponseEntity.ok(downloadFilesFromFolder(key)
+    public Mono<ResponseEntity<Flux<FileInformation>>> testFolderEndpoint(@PathVariable(name = "key") String key) {
+        return Mono.just(ResponseEntity.ok(s3Service.downloadFilesFromFolder(key)
                         .flatMap(
                                 bufferFlux -> bufferFlux)
                         .flatMap(bufferFlux -> bufferFlux)
-                        .map(ByteBuffer::array)
+                        .map(byteBuffer -> new FileInformation("file", byteBuffer.array().length, URI.create("/empty")))
                 )
         ).doOnSuccess(response -> Runtime.getRuntime().gc());
     }
 
-    private Flux<Flux<Flux<ByteBuffer>>> downloadFilesFromFolder(String folder) {
-        ListObjectsV2Request listObjectsV2Request = ListObjectsV2Request.builder()
-                .bucket(s3config.getBucket())
-                .prefix(folder)
-                .build();
-
-        CompletableFuture<ListObjectsV2Response> listObjectsV2ResponseCompletableFuture = s3client.listObjectsV2(listObjectsV2Request);
-        return Mono.fromFuture(listObjectsV2ResponseCompletableFuture)
-                .map(response ->
-                        {
-                            List<Flux<ByteBuffer>> list = new ArrayList<>();
-                            response.contents()
-                                    .forEach(
-                                            s3Object -> list.add(this.downloadFile(s3Object.key()).flux)
-                                    );
-                            return Flux.fromIterable(list);
-                        }
-                ).flux();
-    }
-
-    @SneakyThrows
-    private FluxResponse downloadFile(String key) {
-        GetObjectRequest request = GetObjectRequest.builder()
-                .bucket(s3config.getBucket())
-                .key(key)
-                .build();
-
-        return s3client.getObject(request, new FluxResponseProvider()).get();
-    }
-
-    /**
-     * Lookup a metadata key in a case-insensitive way.
-     *
-     * @param sdkResponse
-     * @param key
-     * @param defaultValue
-     * @return
-     */
-    private String getMetadataItem(GetObjectResponse sdkResponse, String key, String defaultValue) {
-        for (Map.Entry<String, String> entry : sdkResponse.metadata().entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(key)) {
-                return entry.getValue();
-            }
-        }
-        return defaultValue;
-    }
-
-
-    // Helper used to check return codes from an API call
-    private static void checkResult(GetObjectResponse response) {
-        SdkHttpResponse sdkResponse = response.sdkHttpResponse();
-        if (sdkResponse != null && sdkResponse.isSuccessful()) {
-            return;
-        }
-
-        throw new DownloadFailedException(response);
-    }
-
-
-    static class FluxResponseProvider implements AsyncResponseTransformer<GetObjectResponse, FluxResponse> {
-
-        private FluxResponse response;
-
-        @Override
-        public CompletableFuture<FluxResponse> prepare() {
-            response = new FluxResponse();
-            return response.cf;
-        }
-
-        @Override
-        public void onResponse(GetObjectResponse sdkResponse) {
-            this.response.sdkResponse = sdkResponse;
-        }
-
-        @Override
-        public void onStream(SdkPublisher<ByteBuffer> publisher) {
-            response.flux = Flux.from(publisher);
-            response.cf.complete(response);
-        }
-
-        @Override
-        public void exceptionOccurred(Throwable error) {
-            response.cf.completeExceptionally(error);
-        }
-
-    }
-
-    /**
-     * Holds the API response and stream
-     *
-     * @author Philippe
-     */
-    static class FluxResponse {
-
-        final CompletableFuture<FluxResponse> cf = new CompletableFuture<>();
-        GetObjectResponse sdkResponse;
-        Flux<ByteBuffer> flux;
+    @RequestMapping(value = "/information",
+            produces = {"text/event-stream"},
+            method = RequestMethod.GET)
+    public Mono<ResponseEntity<Flux<FileInformation>>> informationGet(
+            @RequestParam(value = "folder", required = true) String folder,
+            @RequestParam(value = "id", required = false) String id) {
+        return Mono.just(
+                ResponseEntity.ok(
+                        s3Service.getFileInformationForFolder(folder)
+                ));
     }
 }
