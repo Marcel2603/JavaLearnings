@@ -85,7 +85,7 @@ public class S3Service {
     }
 
     private FileInformation getFileInformation(S3Object s3Object) {
-        return new FileInformation(Path.of(s3Object.key()).getFileName().toString(), s3Object.size(), URI.create(String.format("/download?key=%s", s3Object.key())));
+        return new FileInformation(Path.of(s3Object.key()).getFileName().toString(), s3Object.size(), URI.create(s3Object.key()));
     }
 
 }
