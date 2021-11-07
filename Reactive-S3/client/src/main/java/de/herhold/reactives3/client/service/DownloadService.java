@@ -3,21 +3,21 @@ package de.herhold.reactives3.client.service;
 import de.herhold.reactives3.api.client.handler.DefaultApi;
 import de.herhold.reactives3.api.client.model.FileInformation;
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Signal;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
+@Log4j2
 public class DownloadService {
     private final DefaultApi defaultApi;
 
@@ -33,7 +33,7 @@ public class DownloadService {
     @SneakyThrows(IOException.class)
     public FileInformation storeFileFromFileInformation(FileInformation fileInformation) {
         if (null == fileInformation) {
-            return null;
+            return fileInformation;
         }
 
         String name = fileInformation.getName();
@@ -43,8 +43,10 @@ public class DownloadService {
             return fileInformation;
         }
         File file = File.createTempFile(name, null, new File("/tmp/reactiveS3"));
+        log.info("Create File {}", file.getAbsolutePath());
         defaultApi.downloadGet(path.toString(), null) //get Chunks of Bytes
                 .doOnEach(signal -> this.storeBytes(signal, file)) // add Chunks to File
+                .doOnComplete(() -> Runtime.getRuntime().gc())
                 .subscribe(); // Profit
         fileInformation.setPath(file.toURI());
         return fileInformation;
@@ -52,15 +54,11 @@ public class DownloadService {
 
     @SneakyThrows(IOException.class)
     private void storeBytes(Signal<byte[]> signal, File file) {
-        byte[] bytes = signal.get();
-        if (null == bytes) {
-            return;
-        }
         try (
                 FileOutputStream fos = new FileOutputStream(file, true);
                 FileChannel fileChannel = fos.getChannel()
         ) {
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            ByteBuffer buffer = ByteBuffer.wrap(Objects.requireNonNullElse(signal.get(), new byte[0]));
             fileChannel.write(buffer);
         }
     }
