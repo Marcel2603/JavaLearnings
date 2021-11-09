@@ -31,7 +31,8 @@ public class DownloadService {
     }
 
     @SneakyThrows(IOException.class)
-    public FileInformation storeFileFromFileInformation(FileInformation fileInformation) {
+    public FileInformation storeFileFromFileInformation(Signal<FileInformation> fileInformationSignal) {
+        FileInformation fileInformation = fileInformationSignal.get();
         if (null == fileInformation) {
             return fileInformation;
         }

@@ -23,7 +23,7 @@ public class TriggerController {
         return Mono.just(
                 ResponseEntity.ok(
                         downloadService.getFileInformationsForFolder(folder)
-                                .map(downloadService::storeFileFromFileInformation)
+                                .doOnEach(downloadService::storeFileFromFileInformation)
                 )
         );
     }

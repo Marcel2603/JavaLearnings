@@ -1,0 +1,34 @@
+services:
+  client:
+    build:
+      context: ./client
+    container_name: client
+    ports:
+    - "9001:9001"
+    volumes:
+    - "./client/target/client.jar:/opt/app.jar:ro"
+  localstack:
+    container_name: localstack
+    environment:
+      DEBUG: '1'
+      DEFAULT_REGION: "eu-central-1"
+      SERVICES: s3
+    image: localstack/localstack
+    networks:
+      default:
+        aliases:
+        - "test-bucket.localstack"
+    ports:
+    - "4566:4566"
+    restart: "unless-stopped"
+    volumes:
+    - "/var/run/docker.sock:/var/run/docker.sock"
+  server:
+    build:
+      context: ./server
+    container_name: server
+    ports:
+    - "9000:9000"
+    volumes:
+    - "./server/target/server.jar:/opt/app.jar:ro"
+version: '3.9'
