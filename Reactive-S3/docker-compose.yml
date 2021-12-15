@@ -8,6 +8,7 @@ services:
       SPRING_PROFILES_ACTIVE: compose
     ports:
     - "9001:9001"
+    - "9011:9011"
     volumes:
     - "./client/target/client.jar:/opt/app.jar:ro"
   localstack:
@@ -38,6 +39,7 @@ services:
       SPRING_PROFILES_ACTIVE: compose
     ports:
     - "9000:9000"
+    - "9010:9010"
     volumes:
     - "./server/target/server.jar:/opt/app.jar:ro"
 version: '3.9'

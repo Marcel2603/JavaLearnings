@@ -14,7 +14,7 @@ let server_service =
               , S3_BUCKET = "some-bucket"
               }
           )
-      , ports = Some [ "9000:9000" ]
+      , ports = Some [ "9000:9000", "9010:9010" ]
       , volumes = Some [ "./server/target/server.jar:/opt/app.jar:ro" ]
       }
 
@@ -29,7 +29,7 @@ let client_service =
               , SERVER_URL = "http://server:9000"
               }
           )
-      , ports = Some [ "9001:9001" ]
+      , ports = Some [ "9001:9001", "9011:9011" ]
       , volumes = Some [ "./client/target/client.jar:/opt/app.jar:ro" ]
       }
 
