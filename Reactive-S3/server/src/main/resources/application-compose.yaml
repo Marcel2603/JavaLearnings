@@ -1,0 +1,4 @@
+app:
+  aws:
+    endpoint: ${LOCALSTACK_URL}
+    bucket: ${S3_BUCKET}

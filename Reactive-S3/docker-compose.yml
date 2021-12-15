@@ -3,8 +3,12 @@ services:
     build:
       context: ./client
     container_name: client
+    environment:
+      SERVER_URL: "http://server:9000"
+      SPRING_PROFILES_ACTIVE: compose
     ports:
     - "9001:9001"
+    - "9011:9011"
     volumes:
     - "./client/target/client.jar:/opt/app.jar:ro"
   localstack:
@@ -12,6 +16,7 @@ services:
     environment:
       DEBUG: '1'
       DEFAULT_REGION: "eu-central-1"
+      S3_BUCKET: "some-bucket"
       SERVICES: s3
     image: localstack/localstack
     networks:
@@ -23,12 +28,18 @@ services:
     restart: "unless-stopped"
     volumes:
     - "/var/run/docker.sock:/var/run/docker.sock"
+    - "./createS3.sh:/docker-entrypoint-initaws.d/createS3.sh"
   server:
     build:
       context: ./server
     container_name: server
+    environment:
+      LOCALSTACK_URL: "http://localstack:4566"
+      S3_BUCKET: "some-bucket"
+      SPRING_PROFILES_ACTIVE: compose
     ports:
     - "9000:9000"
+    - "9010:9010"
     volumes:
     - "./server/target/server.jar:/opt/app.jar:ro"
 version: '3.9'

@@ -5,5 +5,5 @@ app:
     region: eu-central-1
     accessKey: foo
     secretKey: bar
-    endpoint: http://localstack:4566
+    endpoint: http://localhost:4566
     bucket: test-bucket
