@@ -25,7 +25,6 @@ public class TestController implements DefaultApi {
     @Override
     public Mono<ResponseEntity<Flux<byte[]>>> downloadGet(
             @RequestParam(value = "key", required = true) String key,
-            @RequestParam(value = "id", required = false) String id,
             ServerWebExchange exchange) {
         return s3Service.downloadFile(key)
                 .map((response) -> ResponseEntity.ok()
@@ -39,7 +38,6 @@ public class TestController implements DefaultApi {
     @Override
     public Mono<ResponseEntity<Flux<FileInformation>>> informationGet(
             @RequestParam(value = "folder", required = true) String folder,
-            @RequestParam(value = "id", required = false) String id,
             ServerWebExchange serverWebExchange) {
         return Mono.just(
                 ResponseEntity.ok(

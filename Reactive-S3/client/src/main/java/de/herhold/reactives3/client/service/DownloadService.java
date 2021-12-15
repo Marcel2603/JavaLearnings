@@ -27,14 +27,14 @@ public class DownloadService {
 
     public Flux<FileInformation> getFileInformationsForFolder(String folder) {
         return defaultApi
-                .informationGet(folder, null);
+                .informationGet(folder);
     }
 
     @SneakyThrows(IOException.class)
     public FileInformation storeFileFromFileInformation(Signal<FileInformation> fileInformationSignal) {
         FileInformation fileInformation = fileInformationSignal.get();
         if (null == fileInformation) {
-            return fileInformation;
+            return null;
         }
 
         String name = fileInformation.getName();
@@ -43,9 +43,13 @@ public class DownloadService {
             fileInformation.setName(name + "Error");
             return fileInformation;
         }
-        File file = File.createTempFile(name, null, new File("/tmp/reactiveS3"));
+        File directory = new File("/tmp/reactiveS3");
+        if (! directory.isDirectory()){
+            directory.mkdirs();
+        }
+        File file = File.createTempFile(name + "_", null, directory);
         log.info("Create File {}", file.getAbsolutePath());
-        defaultApi.downloadGet(path.toString(), null) //get Chunks of Bytes
+        defaultApi.downloadGet(path.toString()) //get Chunks of Bytes
                 .doOnEach(signal -> this.storeBytes(signal, file)) // add Chunks to File
                 .doOnComplete(() -> Runtime.getRuntime().gc())
                 .subscribe(); // Profit
