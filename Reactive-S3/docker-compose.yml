@@ -1,16 +1,4 @@
 services:
-  client:
-    build:
-      context: ./client
-    container_name: client
-    environment:
-      SERVER_URL: "http://server:9000"
-      SPRING_PROFILES_ACTIVE: compose
-    ports:
-    - "9001:9001"
-    - "9011:9011"
-    volumes:
-    - "./client/target/client.jar:/opt/app.jar:ro"
   localstack:
     container_name: localstack
     environment:
@@ -29,10 +17,22 @@ services:
     volumes:
     - "/var/run/docker.sock:/var/run/docker.sock"
     - "./createS3.sh:/docker-entrypoint-initaws.d/createS3.sh"
-  server:
+  "reactive-client":
     build:
-      context: ./server
-    container_name: server
+      context: ./ReactiveClient
+    container_name: "reactive-client"
+    environment:
+      SERVER_URL: "http://reactive-file-server:9000"
+      SPRING_PROFILES_ACTIVE: compose
+    ports:
+    - "9001:9001"
+    - "9011:9011"
+    volumes:
+    - "./ReactiveClient/target/client.jar:/opt/app.jar:ro"
+  "reactive-server":
+    build:
+      context: ./ReactiveFileServer
+    container_name: "reactive-file-server"
     environment:
       LOCALSTACK_URL: "http://localstack:4566"
       S3_BUCKET: "some-bucket"
@@ -41,5 +41,5 @@ services:
     - "9000:9000"
     - "9010:9010"
     volumes:
-    - "./server/target/server.jar:/opt/app.jar:ro"
+    - "./ReactiveFileServer/target/server.jar:/opt/app.jar:ro"
 version: '3.9'

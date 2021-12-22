@@ -1,0 +1,6 @@
+server:
+  port: 9001
+app:
+  server:
+    url: http://localhost:9000
+    inMemorySizeInMB: 200

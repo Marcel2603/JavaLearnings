@@ -2,11 +2,11 @@ let package =
       https://raw.githubusercontent.com/Marcel2603/DhallDockerCompose/master/package.dhall
         sha256:b3873be1a41883f89d24aa42e7fdff7f6261bee16fe05a21aa4c269978819c0e
 
-let server_service =
+let reactive_file_server_service =
       package.service::{
       , build = Some
-          (package.text_or_build.Object package.build::{ context = "./server" })
-      , container_name = Some "server"
+          (package.text_or_build.Object package.build::{ context = "./ReactiveFileServer" })
+      , container_name = Some "reactive-file-server"
       , environment = Some
           ( toMap
               { SPRING_PROFILES_ACTIVE = "compose"
@@ -15,22 +15,22 @@ let server_service =
               }
           )
       , ports = Some [ "9000:9000", "9010:9010" ]
-      , volumes = Some [ "./server/target/server.jar:/opt/app.jar:ro" ]
+      , volumes = Some [ "./ReactiveFileServer/target/server.jar:/opt/app.jar:ro" ]
       }
 
-let client_service =
+let reactive_client_service =
       package.service::{
       , build = Some
-          (package.text_or_build.Object package.build::{ context = "./client" })
-      , container_name = Some "client"
+          (package.text_or_build.Object package.build::{ context = "./ReactiveClient" })
+      , container_name = Some "reactive-client"
       , environment = Some
           ( toMap
               { SPRING_PROFILES_ACTIVE = "compose"
-              , SERVER_URL = "http://server:9000"
+              , SERVER_URL = "http://reactive-file-server:9000"
               }
           )
       , ports = Some [ "9001:9001", "9011:9011" ]
-      , volumes = Some [ "./client/target/client.jar:/opt/app.jar:ro" ]
+      , volumes = Some [ "./ReactiveClient/target/client.jar:/opt/app.jar:ro" ]
       }
 
 let localstack_service =
@@ -65,8 +65,8 @@ let localstack_service =
 in  package.compose::{
     , services = Some
         ( toMap
-            { server = server_service
-            , client = client_service
+            { reactive-server = reactive_file_server_service
+            , reactive-client = reactive_client_service
             , localstack = localstack_service
             }
         )
