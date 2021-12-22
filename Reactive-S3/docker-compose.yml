@@ -6,7 +6,12 @@ services:
       DEFAULT_REGION: "eu-central-1"
       S3_BUCKET: "some-bucket"
       SERVICES: s3
-    image: localstack/localstack
+    image: "localstack/localstack:0.13.2"
+    labels:
+    - traefik.enable=true
+    - "traefik.http.routers.localstack.rule=Host(`localstack.localhost`)"
+    - traefik.http.routers.localstack.entrypoints=web
+    - traefik.http.services.localstack.loadbalancer.server.port=4566
     networks:
       default:
         aliases:
@@ -24,6 +29,11 @@ services:
     environment:
       SERVER_URL: "http://reactive-file-server:9000"
       SPRING_PROFILES_ACTIVE: compose
+    labels:
+    - traefik.enable=true
+    - "traefik.http.routers.reactive-client.rule=Host(`reactive-client.localhost`)"
+    - "traefik.http.routers.reactive-client.entrypoints=web"
+    - "traefik.http.services.reactive-client.loadbalancer.server.port=9001"
     ports:
     - "9001:9001"
     - "9011:9011"
@@ -37,9 +47,26 @@ services:
       LOCALSTACK_URL: "http://localstack:4566"
       S3_BUCKET: "some-bucket"
       SPRING_PROFILES_ACTIVE: compose
+    labels:
+    - traefik.enable=true
+    - "traefik.http.routers.reactive-file-server.rule=Host(`reactive-file-server.localhost`)"
+    - "traefik.http.routers.reactive-file-server.entrypoints=web"
+    - "traefik.http.services.reactive-file-server.loadbalancer.server.port=9000"
     ports:
     - "9000:9000"
     - "9010:9010"
     volumes:
     - "./ReactiveFileServer/target/server.jar:/opt/app.jar:ro"
+  traefik:
+    command:
+    - "--api.insecure=true"
+    - "--providers.docker=true"
+    - "--entrypoints.web.address=:80"
+    container_name: traefik
+    image: "traefik:v2.5.6"
+    ports:
+    - "80:80"
+    - "8080:8080"
+    volumes:
+    - "/var/run/docker.sock:/var/run/docker.sock"
 version: '3.9'
