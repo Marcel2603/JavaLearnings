@@ -6,27 +6,6 @@ info:
 servers:
   - url: 'http://localhost:9000'
 paths:
-  /download:
-    get:
-      tags:
-        - File
-      summary: returns a file as bytearray
-      parameters:
-        - in: query
-          name: key
-          schema:
-            type: string
-          required: true
-      responses:
-        200:
-          description: A file
-          content:
-            text/event-stream:
-              schema:
-                type: array
-                items:
-                  type: string
-                  format: byte
   /information:
     get:
       tags:
@@ -47,7 +26,28 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FileInformation'
-  /files:
+  /download/file:
+    get:
+      tags:
+        - File
+      summary: returns a file as bytearray
+      parameters:
+        - in: query
+          name: key
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: A file
+          content:
+            text/event-stream:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: byte
+  /download/files:
     get:
       tags:
         - FileMem

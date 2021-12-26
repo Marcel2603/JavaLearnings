@@ -23,7 +23,7 @@ public class FileController implements FileApi {
     }
 
     @Override
-    public Mono<ResponseEntity<Flux<byte[]>>> downloadGet(
+    public Mono<ResponseEntity<Flux<byte[]>>> downloadFileGet(
             @RequestParam(value = "key", required = true) String key,
             ServerWebExchange exchange) {
         return s3Service.downloadFile(key)

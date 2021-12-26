@@ -35,7 +35,7 @@ public class DownloadService {
     }
 
     public Flux<FileContent> getFileContentsForFolder(String folder) {
-        return fileMemApi.filesGet(folder).doOnEach(this::storeFileFromFileContent);
+        return fileMemApi.downloadFilesGet(folder).doOnEach(this::storeFileFromFileContent);
     }
 
     @SneakyThrows(IOException.class)
@@ -72,7 +72,7 @@ public class DownloadService {
         }
         File file = File.createTempFile(name + "_", null, directory);
         log.info("Create File {}", file.getAbsolutePath());
-        fileApi.downloadGet(path.toString()) //get Chunks of Bytes
+        fileApi.downloadFileGet(path.toString()) //get Chunks of Bytes
                 .doOnEach(signal -> this.storeBytes(signal, file)) // add Chunks to File
                 .doOnComplete(() -> Runtime.getRuntime().gc())
                 .subscribe(); // Profit

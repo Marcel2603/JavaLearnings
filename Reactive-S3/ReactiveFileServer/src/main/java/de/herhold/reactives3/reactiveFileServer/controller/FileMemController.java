@@ -22,8 +22,8 @@ public class FileMemController implements FileMemApi {
         this.s3Service = s3Service;
     }
 
-
-    public Mono<ResponseEntity<Flux<FileContent>>> filesGet(
+    @Override
+    public Mono<ResponseEntity<Flux<FileContent>>> downloadFilesGet(
             @NotNull @ApiParam(value = "", required = true) @Valid @RequestParam(value = "folder", required = true) String folder,
             ServerWebExchange exchange) {
         return Mono.just(ResponseEntity.status(200).body(s3Service.getFiles(folder)));
