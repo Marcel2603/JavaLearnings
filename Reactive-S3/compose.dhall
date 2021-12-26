@@ -51,6 +51,25 @@ let reactive_client_service =
       , volumes = Some [ "./ReactiveClient/target/client.jar:/opt/app.jar:ro" ]
       }
 
+let file_server_service =
+      package.service::{
+      , build = Some
+          ( package.text_or_build.Object
+              package.build::{ context = "./FileServer" }
+          )
+      , container_name = Some "file-server"
+      , environment = Some
+          ( toMap
+              { SPRING_PROFILES_ACTIVE = "compose"
+              , LOCALSTACK_URL = "http://localstack:4566"
+              , S3_BUCKET = "some-bucket"
+              }
+          )
+      , ports = Some [ "8000:8000", "8010:8010" ]
+      , labels = Some (traefik_labels "file-server" "8000").labels
+      , volumes = Some [ "./FileServer/target/server.jar:/opt/app.jar:ro" ]
+      }
+
 let localstack_service =
       package.service::{
       , image = Some "localstack/localstack:0.13.2"
@@ -69,7 +88,7 @@ let localstack_service =
           ( package.networks.Networks
               ( toMap
                   { default = package.network::{
-                    , aliases = Some [ "test-bucket.localstack" ]
+                    , aliases = Some [ "some-bucket.localstack" ]
                     }
                   }
               )
@@ -99,8 +118,9 @@ let traefik_service =
 in  package.compose::{
     , services = Some
         ( toMap
-            { reactive-server = reactive_file_server_service
-            , reactive-client = reactive_client_service
+            { reactive-file-server = reactive_file_server_service
+            , reactive-file-client = reactive_client_service
+            , file-server = file_server_service
             , localstack = localstack_service
             , traefik = traefik_service
             }

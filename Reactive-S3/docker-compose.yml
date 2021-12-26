@@ -1,4 +1,22 @@
 services:
+  "file-server":
+    build:
+      context: ./FileServer
+    container_name: "file-server"
+    environment:
+      LOCALSTACK_URL: "http://localstack:4566"
+      S3_BUCKET: "some-bucket"
+      SPRING_PROFILES_ACTIVE: compose
+    labels:
+    - traefik.enable=true
+    - "traefik.http.routers.file-server.rule=Host(`file-server.localhost`)"
+    - "traefik.http.routers.file-server.entrypoints=web"
+    - "traefik.http.services.file-server.loadbalancer.server.port=8000"
+    ports:
+    - "8000:8000"
+    - "8010:8010"
+    volumes:
+    - "./FileServer/target/server.jar:/opt/app.jar:ro"
   localstack:
     container_name: localstack
     environment:
@@ -15,14 +33,14 @@ services:
     networks:
       default:
         aliases:
-        - "test-bucket.localstack"
+        - "some-bucket.localstack"
     ports:
     - "4566:4566"
     restart: "unless-stopped"
     volumes:
     - "/var/run/docker.sock:/var/run/docker.sock"
     - "./createS3.sh:/docker-entrypoint-initaws.d/createS3.sh"
-  "reactive-client":
+  "reactive-file-client":
     build:
       context: ./ReactiveClient
     container_name: "reactive-client"
@@ -39,7 +57,7 @@ services:
     - "9011:9011"
     volumes:
     - "./ReactiveClient/target/client.jar:/opt/app.jar:ro"
-  "reactive-server":
+  "reactive-file-server":
     build:
       context: ./ReactiveFileServer
     container_name: "reactive-file-server"

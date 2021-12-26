@@ -20,22 +20,23 @@ public class S3ClientConfiguration {
     @Bean
     public S3AsyncClient s3client(S3ClientConfigurarionProperties s3props,
                                   AwsCredentialsProvider credentialsProvider) {
-        SdkAsyncHttpClient httpClient = NettyNioAsyncHttpClient.builder()
-                .writeTimeout(Duration.ZERO)
-                .maxConcurrency(64)
-                .build();
-        S3Configuration serviceConfiguration = S3Configuration.builder()
-                .checksumValidationEnabled(false)
-                .chunkedEncodingEnabled(true)
-                .build();
-        S3AsyncClientBuilder b = S3AsyncClient.builder().httpClient(httpClient)
+//        SdkAsyncHttpClient httpClient = NettyNioAsyncHttpClient.builder()
+//                .writeTimeout(Duration.ZERO)
+//                .maxConcurrency(64)
+//                .build();
+//        S3Configuration serviceConfiguration = S3Configuration.builder()
+//                .checksumValidationEnabled(false)
+//                .chunkedEncodingEnabled(true)
+//                .build();
+        S3AsyncClientBuilder s3AsyncClientBuilder = S3AsyncClient.builder()
+//                .httpClient(httpClient)
                 .region(Region.of(s3props.getRegion()))
-                .credentialsProvider(credentialsProvider)
-                .serviceConfiguration(serviceConfiguration);
+                .credentialsProvider(credentialsProvider);
+//                .serviceConfiguration(serviceConfiguration);
 
         if (s3props.getEndpoint() != null) {
-            b = b.endpointOverride(URI.create(s3props.getEndpoint()));
+            s3AsyncClientBuilder = s3AsyncClientBuilder.endpointOverride(URI.create(s3props.getEndpoint()));
         }
-        return b.build();
+        return s3AsyncClientBuilder.build();
     }
 }

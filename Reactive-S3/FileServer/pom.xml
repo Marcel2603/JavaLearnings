@@ -8,9 +8,8 @@
         <version>2.6.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>de.herhold.reactives3</groupId>
-    <artifactId>ReactiveClient</artifactId>
-    <name>ReactiveClient</name>
+    <groupId>de.herhold.reactive-s3</groupId>
+    <artifactId>FileServer</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <properties>
         <java.version>11</java.version>
@@ -19,44 +18,42 @@
     <dependencies>
         <dependency>
             <groupId>de.herhold.reactives3.api.file-api</groupId>
-            <artifactId>file-reactive-client-api</artifactId>
+            <artifactId>file-server-api</artifactId>
             <version>0.0.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
-            <scope>test</scope>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
+
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${org.mapstruct.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>1.12.130</version>
+        </dependency>
     </dependencies>
 
     <build>
-        <finalName>client</finalName>
+        <finalName>server</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

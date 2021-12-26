@@ -20,5 +20,6 @@
         <module>api</module>
         <module>ReactiveClient</module>
         <module>ReactiveFileServer</module>
+        <module>FileServer</module>
     </modules>
 </project>

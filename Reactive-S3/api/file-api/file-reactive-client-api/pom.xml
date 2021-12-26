@@ -3,21 +3,29 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>de.herhold.reactives3.api</groupId>
         <artifactId>file-api</artifactId>
+        <groupId>de.herhold.reactives3.api</groupId>
         <version>0.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.herhold.reactives3.api.file-api</groupId>
-    <artifactId>file-reactive-server-api</artifactId>
+    <artifactId>file-reactive-client-api</artifactId>
+
     <packaging>jar</packaging>
     <version>0.0.1</version>
 
     <properties>
-        <default.package>de.herhold.reactives3.api.fileApi.reactiveServer</default.package>
+        <default.package>de.herhold.reactives3.api.fileApi.reactiveClient</default.package>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.13.0</version>
+        </dependency>
+    </dependencies>
     <build>
         <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
@@ -32,12 +40,11 @@
                         </goals>
                         <configuration>
                             <inputSpec>${project.basedir}/../api-reactive.yml</inputSpec>
-                            <generatorName>spring</generatorName>
+                            <generatorName>java</generatorName>
+                            <generateSupportingFiles>true</generateSupportingFiles>
                             <configOptions>
-                                <library>spring-boot</library>
+                                <library>webclient</library>
                                 <dateLibrary>java8</dateLibrary>
-                                <reactive>true</reactive>
-                                <useTags>true</useTags>
                                 <apiPackage>${default.package}.handler</apiPackage>
                                 <modelPackage>${default.package}.model</modelPackage>
                                 <invokerPackage>${default.package}.handler</invokerPackage>
