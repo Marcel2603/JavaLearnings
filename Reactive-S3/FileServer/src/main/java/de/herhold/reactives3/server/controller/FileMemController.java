@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,9 @@ public class FileMemController implements FileMemApi {
     @SneakyThrows(IOException.class)
     private FileContent addContentToFileInformation(FileInformation fileInformation) {
         FileContent fileContent = FileContentMapper.INSTANCE.mapFileInformationToContent(fileInformation);
-        return fileContent.content(s3Service.getBytesForKey(fileContent.getPath().toString()).readAllBytes());
+        InputStream bytesForKey = s3Service.getBytesForKey(fileContent.getPath().toString());
+        fileContent.setContent(bytesForKey.readAllBytes());
+        bytesForKey.close();
+        return fileContent;
     }
 }

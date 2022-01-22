@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,9 @@ public class FileController implements FileApi {
     public ResponseEntity<byte[]> downloadFileGet(
             @NotNull @ApiParam(value = "", required = true) @Valid @RequestParam(value = "key", required = true) String key
     ) {
-        return ResponseEntity.ok(s3Service.getBytesForKey(key).readAllBytes());
+        InputStream bytesForKey = s3Service.getBytesForKey(key);
+        byte[] content = bytesForKey.readAllBytes();
+        bytesForKey.close();
+        return ResponseEntity.ok(content);
     }
 }
