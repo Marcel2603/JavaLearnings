@@ -5,7 +5,6 @@ import de.herhold.reactives3.reactiveFileServer.config.S3ClientConfigurarionProp
 import de.herhold.reactives3.reactiveFileServer.helper.FluxResponseProvider;
 import de.herhold.reactives3.reactiveFileServer.model.FileInformation;
 import de.herhold.reactives3.reactiveFileServer.model.FluxResponse;
-import io.netty.buffer.ByteBuf;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -55,6 +54,25 @@ public class S3Service {
 
     public Flux<FileContent> getFiles(String folder) {
         return this.getFileInformationForFolder(folder).map(this::mapFileInformationToContent);
+    }
+
+    public Flux<ByteBuffer> getFilesBlobs(String folder) {
+        return this.getFileInformationForFolder(folder)
+                .map(fileInformation -> downloadFile(fileInformation.getPath().toString()))
+                .flatMap(fluxResponseMono -> {
+                    return fluxResponseMono.map(FluxResponse::getFlux)
+                            .flux();
+                }) // Flux<Flux<ByteBuffer>>
+                .flatMap(byteBufferFlux -> byteBufferFlux.reduce(
+                        // Where the hell is start and end?
+                        (firstBuffer, nextBuffer) -> {
+                            // I will need aaaaa lot of memory
+                            ByteBuffer byteBuffer = ByteBuffer.allocate(firstBuffer.capacity() + nextBuffer.capacity());
+                            byteBuffer.put(firstBuffer);
+                            byteBuffer.put(nextBuffer);
+                            return byteBuffer;
+                        }
+                ));// Flux<ByteBuffer>
     }
 
     private FileContent mapFileInformationToContent(FileInformation fileInformation) {
