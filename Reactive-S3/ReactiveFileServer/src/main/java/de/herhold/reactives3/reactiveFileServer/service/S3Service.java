@@ -56,6 +56,25 @@ public class S3Service {
         return this.getFileInformationForFolder(folder).map(this::mapFileInformationToContent);
     }
 
+    public Flux<ByteBuffer> getFilesBlobs(String folder) {
+        return this.getFileInformationForFolder(folder)
+                .map(fileInformation -> downloadFile(fileInformation.getPath().toString()))
+                .flatMap(fluxResponseMono -> {
+                    return fluxResponseMono.map(FluxResponse::getFlux)
+                            .flux();
+                }) // Flux<Flux<ByteBuffer>>
+                .flatMap(byteBufferFlux -> byteBufferFlux.reduce(
+                        // Where the hell is start and end?
+                        (firstBuffer, nextBuffer) -> {
+                            // I will need aaaaa lot of memory
+                            ByteBuffer byteBuffer = ByteBuffer.allocate(firstBuffer.capacity() + nextBuffer.capacity());
+                            byteBuffer.put(firstBuffer);
+                            byteBuffer.put(nextBuffer);
+                            return byteBuffer;
+                        }
+                ));// Flux<ByteBuffer>
+    }
+
     private FileContent mapFileInformationToContent(FileInformation fileInformation) {
         FileContent fileContent = new FileContent().name(fileInformation.getName()).path(fileInformation.getPath());
         long contentLength = fileInformation.getSize();

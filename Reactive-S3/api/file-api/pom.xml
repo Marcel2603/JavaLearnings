@@ -14,8 +14,9 @@
     <packaging>pom</packaging>
     <version>0.0.1</version>
     <modules>
-        <module>file-client-api</module>
+        <module>file-reactive-client-api</module>
         <module>file-reactive-server-api</module>
+        <module>file-server-api</module>
     </modules>
 
     <properties>
@@ -37,6 +38,7 @@
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
             <version>${javax.servlet-api.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

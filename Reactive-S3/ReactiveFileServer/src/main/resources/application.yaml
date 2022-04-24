@@ -1,5 +1,11 @@
 server:
   port: 9000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+      base-path: /
 app:
   aws:
     region: eu-central-1

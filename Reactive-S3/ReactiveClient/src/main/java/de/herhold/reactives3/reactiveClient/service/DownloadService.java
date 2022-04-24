@@ -4,6 +4,8 @@ import de.herhold.reactives3.api.fileApi.reactiveClient.handler.FileApi;
 import de.herhold.reactives3.api.fileApi.reactiveClient.handler.FileMemApi;
 import de.herhold.reactives3.api.fileApi.reactiveClient.model.FileContent;
 import de.herhold.reactives3.api.fileApi.reactiveClient.model.FileInformation;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -17,16 +19,26 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @Log4j2
 public class DownloadService {
     private final FileApi fileApi;
     private final FileMemApi fileMemApi;
+    private final MeterRegistry meterRegistry;
+    private AtomicLong lastStroedChunkBytes;
 
-    public DownloadService(FileApi fileApi, FileMemApi fileMemApi) {
+    public DownloadService(FileApi fileApi, FileMemApi fileMemApi, MeterRegistry meterRegistry) {
         this.fileApi = fileApi;
         this.fileMemApi = fileMemApi;
+        this.meterRegistry = meterRegistry;
+        defineMonitoring();
+    }
+
+    private void defineMonitoring() {
+        this.lastStroedChunkBytes = new AtomicLong();
+        Gauge.builder("last_stored_chunk_bytes", this.lastStroedChunkBytes, AtomicLong::floatValue).register(meterRegistry);
     }
 
     public Flux<FileInformation> getFileInformationsForFolder(String folder) {
@@ -90,6 +102,11 @@ public class DownloadService {
                 FileOutputStream fos = new FileOutputStream(file, true);
                 FileChannel fileChannel = fos.getChannel()
         ) {
+            int length = bytes.length;
+            System.out.println(length);
+            if (length > 0) {
+                this.lastStroedChunkBytes.set(length);
+            }
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
             fileChannel.write(buffer);
         }

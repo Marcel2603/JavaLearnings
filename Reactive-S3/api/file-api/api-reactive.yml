@@ -21,7 +21,7 @@ paths:
         200:
           description: returns an array with all file informations
           content:
-            application/json:
+            text/event-stream:
               schema:
                 type: array
                 items:
@@ -41,10 +41,12 @@ paths:
         200:
           description: A file
           content:
-            application/json:
+            text/event-stream:
               schema:
-                type: string
-                format: byte
+                type: array
+                items:
+                  type: string
+                  format: byte
   /download/files:
     get:
       tags:
@@ -60,7 +62,7 @@ paths:
         200:
           description: returns an array with all files from folder
           content:
-            application/json:
+            text/event-stream:
               schema:
                 type: array
                 items:

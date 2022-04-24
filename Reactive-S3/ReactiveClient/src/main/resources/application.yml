@@ -1,5 +1,11 @@
 server:
   port: 9001
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+      base-path: /
 app:
   server:
     url: http://localhost:9000
