@@ -13,10 +13,15 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.net.URI;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -24,9 +29,12 @@ public class S3Service {
     private final S3AsyncClient s3client;
     private final S3ClientConfigurarionProperties s3config;
 
-    public S3Service(S3AsyncClient s3client, S3ClientConfigurarionProperties s3config) {
+    private final S3Presigner s3Presigner;
+
+    public S3Service(S3AsyncClient s3client, S3ClientConfigurarionProperties s3config, S3Presigner s3Presigner) {
         this.s3client = s3client;
         this.s3config = s3config;
+        this.s3Presigner = s3Presigner;
     }
 
     public Mono<FluxResponse> downloadFile(String key) {
@@ -89,4 +97,21 @@ public class S3Service {
         return new FileInformation(Path.of(s3Object.key()).getFileName().toString(), s3Object.size(), URI.create(s3Object.key()));
     }
 
+    public URL getLink(String key) {
+        // Create a GetObjectRequest to be pre-signed
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(s3config.getBucket())
+                .key(String.format("%s/%s", s3config.getBucket(), key))
+                .build();
+
+        GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(60))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        PresignedGetObjectRequest presignedGetObjectRequest = s3Presigner.presignGetObject(getObjectPresignRequest);
+        String theUrl = presignedGetObjectRequest.url().toString();
+        System.out.println("Presigned URL: " + theUrl);
+        return presignedGetObjectRequest.url();
+    }
 }

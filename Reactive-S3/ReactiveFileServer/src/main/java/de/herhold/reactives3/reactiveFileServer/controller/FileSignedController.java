@@ -6,33 +6,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.nio.ByteBuffer;
+import java.net.URL;
 
 @RestController
-public class FileVideoController {
-
+public class FileSignedController {
     private final S3Service s3Service;
 
-    public FileVideoController(S3Service s3Service) {
+    public FileSignedController(S3Service s3Service) {
         this.s3Service = s3Service;
     }
 
-    @GetMapping(
-            path = "/downloadVideo",
-            produces = "video/webm"
-    )
-    public Mono<ResponseEntity<Flux<byte[]>>> downloadFileGet(
+    @GetMapping(path = "/link/file")
+    public Mono<ResponseEntity<URL>> retrievedSignedUrl(
             @RequestParam(value = "key", required = true) String key,
-            ServerWebExchange exchange) {
-        return s3Service.downloadFile(key)
-                .map((response) -> ResponseEntity.ok()
-                        .body(response
-                                .getFlux()
-                                .map(ByteBuffer::array)
-                        ));
+            ServerWebExchange exchange
+    ) {
+        return Mono.just(ResponseEntity.ok().headers(
+                httpHeaders -> httpHeaders.add("Access-Control-Allow-Origin","*")
+        ).body(s3Service.getLink(key)));
     }
 }
-
