@@ -1,0 +1,58 @@
+{
+  "MusicCollection": [
+    {
+      "PutRequest": {
+        "Item": {
+          "Artist": {
+            "S": "Kraftklub"
+          },
+          "SongTitle": {
+            "S": "Ein Song reicht"
+          },
+          "CreatedAt": {
+            "S": "1672692971"
+          },
+          "Approval": {
+            "S": "NOT SET"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "Artist": {
+            "S": "Kraftklub"
+          },
+          "SongTitle": {
+            "S": "Wie ich"
+          },
+          "CreatedAt": {
+            "S": "1641243348"
+          },
+          "Approval": {
+            "S": "NOT SET"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "Artist": {
+            "S": "Alligatoah"
+          },
+          "SongTitle": {
+            "S": "Musik ist keine Lösung"
+          },
+          "CreatedAt": {
+            "S": "1672779348"
+          },
+          "Approval": {
+            "S": "NOT SET"
+          }
+        }
+      }
+    }
+  ]
+}
